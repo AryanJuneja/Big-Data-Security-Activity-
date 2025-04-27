@@ -1,0 +1,81 @@
+# for k=2
+import pandas as pd
+
+data = [
+    {'ZIP Code': '13053', 'Age': 29, 'Gender': 'F', 'Condition': 'Diabetes'},
+    {'ZIP Code': '13053', 'Age': 29, 'Gender': 'F', 'Condition': 'Cancer'},
+    {'ZIP Code': '13068', 'Age': 45, 'Gender': 'M', 'Condition': 'Hypertension'},
+    {'ZIP Code': '13053', 'Age': 31, 'Gender': 'M', 'Condition': 'Flu'},
+    {'ZIP Code': '13068', 'Age': 47, 'Gender': 'M', 'Condition': 'Asthma'},
+    {'ZIP Code': '13053', 'Age': 33, 'Gender': 'M', 'Condition': 'Allergy'},
+]
+
+df = pd.DataFrame(data)
+
+def generalize(df, k=2):
+    # Step 1: Generalize ZIP Code to first 3 digits (e.g., 130**)
+    df['ZIP Code'] = df['ZIP Code'].str[:3] + '**'
+    
+    def age_range(age):
+        if age < 30:
+            return '20-29'
+        elif age < 40:
+            return '30-39'
+        elif age < 50:
+            return '40-49'
+        else:
+            return '50+'
+    df['Age'] = df['Age'].apply(age_range)
+    
+    groups = df.groupby(['ZIP Code', 'Age', 'Gender'])
+    counts = groups.transform('count')['Condition']
+    
+    df.loc[counts < k, ['ZIP Code', 'Age', 'Gender']] = '***'
+    
+    return df
+
+k = 2
+anon_df = generalize(df.copy(), k)
+
+print("Anonymized Data (k={}):".format(k))
+print(anon_df.to_string(index=False))
+
+
+
+
+
+
+
+
+# for K=3
+import pandas as pd
+
+data = {
+    "ZIP Code": [13053, 13053, 13068, 13053, 13068, 13053],
+    "Age": [29, 29, 45, 31, 47, 33],
+    "Gender": ['F', 'F', 'M', 'M', 'M', 'M'],
+    "Condition": ['Diabetes', 'Cancer', 'Hypertension', 'Flu', 'Asthma', 'Allergy']
+}
+
+df = pd.DataFrame(data)
+
+def generalize_zip(zip_code):
+    return str(zip_code)[:2] + " ***"
+
+def generalize_age(age):
+    if 20 <= age <= 39:
+        return "20-39"
+    elif 40 <= age <= 59:
+        return "40-59"
+    else:
+        return "Other"
+
+def generalize_gender(gender):
+    return "*"
+
+df['ZIP Code'] = df['ZIP Code'].apply(generalize_zip)
+df['Age'] = df['Age'].apply(generalize_age)
+df['Gender'] = df['Gender'].apply(generalize_gender)
+
+print("Generalized Data for k-anonymity (k=3):\n")
+print(df)
