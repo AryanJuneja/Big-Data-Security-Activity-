@@ -1,0 +1,63 @@
+def gcd(a, b):
+    while b != 0:
+        a, b = b, a % b
+    return a
+
+def is_prime(n):
+    if n <= 1:
+        return False
+    for i in range(2, int(n ** 0.5) + 1):
+        if n % i == 0:
+            return False
+    return True
+
+def mod_inverse(e, phi):
+    original_phi = phi
+    x0, x1 = 0, 1
+    while e > 1:
+        q = e // phi
+        e, phi = phi, e % phi
+        x0, x1 = x1 - q * x0, x0
+    return x1 + original_phi if x1 < 0 else x1
+
+def generate_keys(p, q):
+    if not (is_prime(p) and is_prime(q)):
+        raise ValueError("Both numbers must be prime.")
+    elif p == q:
+        raise ValueError("p and q cannot be equal.")
+
+    n = p * q
+    phi = (p - 1) * (q - 1)
+
+    e = 2
+    while e < phi:
+        if gcd(e, phi) == 1:
+            break
+        e += 1
+
+    d = mod_inverse(e, phi)
+
+    return ((e, n), (d, n))
+
+def encrypt(message, public_key):
+    e, n = public_key
+    encrypted = [pow(ord(char), e, n) for char in message]
+    return encrypted
+
+def decrypt(ciphertext, private_key):
+    d, n = private_key
+    decrypted = [chr(pow(char, d, n)) for char in ciphertext]
+    return ''.join(decrypted)
+
+p = 61
+q = 53
+public_key, private_key = generate_keys(p, q)
+
+message = "HELLO"
+print("Original Message:", message)
+
+cipher = encrypt(message, public_key)
+print("Encrypted Message:", cipher)
+
+original = decrypt(cipher, private_key)
+print("Decrypted Message:", original)
