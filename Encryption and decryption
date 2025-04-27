@@ -1,0 +1,83 @@
+import random
+import math
+
+def gcd(a, b):
+    while b:
+        a, b = b, a % b
+    return a
+
+def lcm(a, b):
+    return a * b // gcd(a, b)
+
+def modinv(a, m):
+    g, x, y = extended_gcd(a, m)
+    if g != 1:
+        raise Exception('No modular inverse exists')
+    return x % m
+
+def extended_gcd(a, b):
+    if a == 0:
+        return (b, 0, 1)
+    g, y, x = extended_gcd(b % a, a)
+    return (g, x - (b // a) * y, y)
+
+def is_prime(n):
+    if n < 2:
+        return False
+    for i in range(2, int(math.sqrt(n)) + 1):
+        if n % i == 0:
+            return False
+    return True
+
+def random_prime(bits=8):
+    while True:
+        p = random.randint(2**(bits-1), 2**bits - 1)
+        if is_prime(p):
+            return p
+
+def generate_keys(bits=8):
+    p, q = random_prime(bits), random_prime(bits)
+    while p == q:
+        q = random_prime(bits)
+    n = p * q
+    g = n + 1
+    lam = lcm(p - 1, q - 1)
+    n_sq = n * n
+    mu = modinv((pow(g, lam, n_sq) - 1) // n, n)
+    return (n, g), (lam, mu)
+
+def encrypt(m, public_key):
+    n, g = public_key
+    n_sq = n * n
+    r = random.randint(1, n - 1)
+    while gcd(r, n) != 1:
+        r = random.randint(1, n - 1)
+    return (pow(g, m, n_sq) * pow(r, n, n_sq)) % n_sq
+
+def decrypt(c, public_key, private_key):
+    n, g = public_key
+    lam, mu = private_key
+    n_sq = n * n
+    u = pow(c, lam, n_sq)
+    l = (u - 1) // n
+    return (l * mu) % n
+
+# Generate keys
+public_key, private_key = generate_keys(bits=8)
+n, g = public_key
+n_sq = n * n
+
+a = 10
+b = 7
+
+enc_a = encrypt(a, public_key)
+enc_b = encrypt(b, public_key)
+
+enc_sum = (enc_a * enc_b) % n_sq
+
+decrypted_sum = decrypt(enc_sum, public_key, private_key)
+
+print("Original numbers:     ", a, b)
+print("Encrypted values:     ", enc_a, enc_b)
+print("Encrypted sum:        ", enc_sum)
+print("Decrypted sum result: ", decrypted_sum)
